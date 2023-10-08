@@ -4,7 +4,6 @@ import { v4 } from 'uuid'
 import { API_KEY, API_URL, APP_ID } from '@/config'
 import { userHashedId } from "@/auth/helpers";
 
-
 const userPrefix = `user_${APP_ID}:`
 export const getInfo = (request: NextRequest) => {
   const sessionId = request.cookies.get('session_id')?.value || v4()
@@ -13,8 +12,6 @@ export const getInfo = (request: NextRequest) => {
     sessionId,
     user,
   }
-  // const userId = await userHashedId()
-  // let user = userId + '_' + APP_ID
 }
 
 export const setSession = (sessionId: string) => {

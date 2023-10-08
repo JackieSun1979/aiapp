@@ -20,12 +20,12 @@ import { replaceVarWithValues, userInputsFormToPromptVariables } from '@/utils/p
 import AppUnavailable from '@/app/components/app-unavailable'
 import { API_KEY, APP_ID, APP_INFO, isShowPrompt, promptTemplate } from '@/config'
 
-const Main: FC = () => {
+const Main: FC = (props: any) => {
   const { t } = useTranslation()
   const media = useBreakpoints()
   const isMobile = media === MediaType.mobile
   const hasSetAppConfig = APP_ID && API_KEY
-
+  let userId = props.userId
   /*
   * app info
   */
@@ -40,7 +40,6 @@ const Main: FC = () => {
     if (APP_INFO?.title)
       document.title = `${APP_INFO.title} - Powered by GotoAI`
   }, [APP_INFO?.title])
-
   /*
   * conversation info
   */
@@ -269,10 +268,13 @@ const Main: FC = () => {
       notify({ type: 'info', message: t('app.errorMessage.waitForResponse') })
       return
     }
+    // const user = await userSession();
+    // console.log(user)
     const data = {
       inputs: currInputs,
       query: message,
       conversation_id: isNewConversation ? null : currConversationId,
+      user: userId
     }
 
     // qustion
@@ -400,6 +402,7 @@ const Main: FC = () => {
             </div>
           </div>
         )}
+
         {/* main */}
         <div className='flex-grow flex flex-col h-[calc(100vh_-_3rem)] overflow-y-auto'>
 

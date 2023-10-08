@@ -17,7 +17,6 @@ export const userHashedId = async (): Promise<string> => {
   }
   throw new Error("User not found");
 };
-
 export type UserModel = {
   name: string;
   image: string;

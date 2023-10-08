@@ -1,6 +1,8 @@
 import type { IOnCompleted, IOnData, IOnError } from './base'
 import { get, post, ssePost } from './base'
 import type { Feedbacktype } from '@/types/app'
+import { userSession, userHashedId } from "@/auth/helpers";
+
 
 export const sendChatMessage = async (body: Record<string, any>, { onData, onCompleted, onError }: {
   onData: IOnData
@@ -10,7 +12,7 @@ export const sendChatMessage = async (body: Record<string, any>, { onData, onCom
   return ssePost('chat-messages', {
     body: {
       ...body,
-      response_mode: 'streaming',
+      response_mode: 'streaming'
     },
   }, { onData, onCompleted, onError })
 }
