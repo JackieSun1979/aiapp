@@ -1,12 +1,14 @@
 import { type NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
-import { client, getInfo, setSession } from '@/app/api/utils/common'
-import { userId } from "@/auth/helpers";
+import { getInfo, setSession } from '@/app/api/utils/common'
+import { chatClient } from '@/utils/chat-client'
 
 export async function GET(request: NextRequest) {
   const { sessionId, user } = getInfo(request)
+  let val = request.cookies.get('key')?.value
   try {
-    const { data } = await client.getApplicationParameters(user)
+    let chat = chatClient(val)
+    const { data } = await chat.getApplicationParameters(user)
     return NextResponse.json(data as object, {
       headers: setSession(sessionId),
     })

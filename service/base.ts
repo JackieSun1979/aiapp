@@ -1,4 +1,4 @@
-import { API_PREFIX } from '@/config'
+import { API_PREFIX, PUBLIC_API_PREFIX } from '@/config'
 import Toast from '@/app/components/base/toast'
 
 const TIME_OUT = 100000
@@ -187,7 +187,7 @@ export const ssePost = (url: string, fetchOptions: any, { onData, onCompleted, o
   }, fetchOptions)
 
   const urlPrefix = API_PREFIX
-  const urlWithPrefix = `${urlPrefix}${url.startsWith('/') ? url : `/${url}`}`
+  const urlWithPrefix = urlPrefix + `${url.startsWith('/') ? url : `/${url}`}`
 
   const { body } = options
   if (body)
@@ -219,6 +219,89 @@ export const ssePost = (url: string, fetchOptions: any, { onData, onCompleted, o
     })
 }
 
+
+const baseRequest = (url: string, fetchOptions: any, { needAllResponseContent }: IOtherOptions) => {
+  const options = Object.assign({}, baseOptions, fetchOptions)
+
+  const urlPrefix = PUBLIC_API_PREFIX
+
+  let urlWithPrefix = urlPrefix + `${url.startsWith('/') ? url : `/${url}`}`
+
+  const { method, params, body } = options
+  // handle query
+  if (method === 'GET' && params) {
+    const paramsArray: string[] = []
+    Object.keys(params).forEach(key =>
+      paramsArray.push(`${key}=${encodeURIComponent(params[key])}`),
+    )
+    if (urlWithPrefix.search(/\?/) === -1)
+      urlWithPrefix += `?${paramsArray.join('&')}`
+
+    else
+      urlWithPrefix += `&${paramsArray.join('&')}`
+
+    delete options.params
+  }
+
+  if (body)
+    options.body = JSON.stringify(body)
+
+  // Handle timeout
+  return Promise.race([
+    new Promise((resolve, reject) => {
+      setTimeout(() => {
+        reject(new Error('request timeout'))
+      }, TIME_OUT)
+    }),
+    new Promise((resolve, reject) => {
+      globalThis.fetch(urlWithPrefix, options)
+        .then((res: any) => {
+          const resClone = res.clone()
+          // Error handler
+          if (!/^(2|3)\d{2}$/.test(res.status)) {
+            try {
+              const bodyJson = res.json()
+              switch (res.status) {
+                case 401: {
+                  Toast.notify({ type: 'error', message: 'Invalid token' })
+                  return
+                }
+                default:
+                  // eslint-disable-next-line no-new
+                  new Promise(() => {
+                    bodyJson.then((data: any) => {
+                      Toast.notify({ type: 'error', message: data.message })
+                    })
+                  })
+              }
+            }
+            catch (e) {
+              console.log(JSON.stringify(e))
+              // Toast.notify({ type: 'error', message: `${e}` })
+            }
+
+            return Promise.reject(resClone)
+          }
+
+          // handle delete api. Delete api not return content.
+          if (res.status === 204) {
+            resolve({ result: 'success' })
+            return
+          }
+
+          // return data
+          const data = options.headers.get('Content-type') === ContentType.download ? res.blob() : res.json()
+
+          resolve(needAllResponseContent ? resClone : data)
+        })
+        .catch((err) => {
+          reject(err)
+        })
+    }),
+  ])
+}
+
+
 export const request = (url: string, options = {}, otherOptions?: IOtherOptions) => {
   return baseFetch(url, options, otherOptions || {})
 }
@@ -226,7 +309,9 @@ export const request = (url: string, options = {}, otherOptions?: IOtherOptions)
 export const get = (url: string, options = {}, otherOptions?: IOtherOptions) => {
   return request(url, Object.assign({}, options, { method: 'GET' }), otherOptions)
 }
-
+export const getRequest = (url: string, options = {}, otherOptions?: IOtherOptions) => {
+  return baseRequest(url, Object.assign({}, options, { method: 'GET' }), otherOptions || {})
+}
 export const post = (url: string, options = {}, otherOptions?: IOtherOptions) => {
   return request(url, Object.assign({}, options, { method: 'POST' }), otherOptions)
 }

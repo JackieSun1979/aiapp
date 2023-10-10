@@ -1,5 +1,5 @@
 import type { IOnCompleted, IOnData, IOnError } from './base'
-import { get, post, ssePost } from './base'
+import { get, post, ssePost, getRequest } from './base'
 import type { Feedbacktype } from '@/types/app'
 import { userSession, userHashedId } from "@/auth/helpers";
 
@@ -33,3 +33,18 @@ export const fetchAppParams = async () => {
 export const updateFeedback = async ({ url, body }: { url: string; body: Feedbacktype }) => {
   return post(url, { body })
 }
+
+export const userAppData = (loginname: any): Promise<any> => {
+  return getRequest(`workspaces/current/endusers/query?loginname=${loginname}`)
+}
+export const getDepartments = (enduserid: any): Promise<any> => {
+  return getRequest(`workspaces/current/endusers/${enduserid}/departments`)
+}
+export const getAppId = (enduserid: any): Promise<any> => {
+  return getRequest(`workspaces/current/departments/${enduserid}/apps`)
+}
+export const getAppKey = (appid: any): Promise<any> => {
+  return getRequest(`apps/${appid}/api-keys`)
+}
+
+

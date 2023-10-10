@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-use-before-define */
 'use client'
 import type { FC } from 'react'
 import React, { useEffect, useRef, useState } from 'react'
@@ -18,17 +17,30 @@ import useBreakpoints, { MediaType } from '@/hooks/use-breakpoints'
 import Loading from '@/app/components/base/loading'
 import { replaceVarWithValues, userInputsFormToPromptVariables } from '@/utils/prompt'
 import AppUnavailable from '@/app/components/app-unavailable'
-import { API_KEY, APP_ID, APP_INFO, isShowPrompt, promptTemplate } from '@/config'
+import { APP_ID, APP_INFO, isShowPrompt, promptTemplate } from '@/config'
+import Cookies from 'js-cookie'
 
 const Main: FC = (props: any) => {
+  let userId = props.userId
+  let appkey = props.appkey
+  Cookies.set('session_id', userId)
+  Cookies.set('key', props.appkey)
   const { t } = useTranslation()
   const media = useBreakpoints()
+  const { notify } = Toast
+  const logError = (message: string) => {
+    notify({ type: 'error', message })
+  }
   const isMobile = media === MediaType.mobile
-  const hasSetAppConfig = APP_ID && API_KEY
-  let userId = props.userId
+  const hasSetAppConfig = appkey ? true : false
+  if (!hasSetAppConfig) {
+    logError(t('app.common.appUnavailable'))
+  }
+
   /*
   * app info
   */
+
   const [appUnavailable, setAppUnavailable] = useState<boolean>(false)
   const [isUnknwonReason, setIsUnknwonReason] = useState<boolean>(false)
   const [promptConfig, setPromptConfig] = useState<PromptConfig | null>(null)
@@ -40,6 +52,7 @@ const Main: FC = (props: any) => {
     if (APP_INFO?.title)
       document.title = `${APP_INFO.title} - Powered by GotoAI`
   }, [APP_INFO?.title])
+
   /*
   * conversation info
   */
@@ -239,10 +252,7 @@ const Main: FC = (props: any) => {
   }, [])
 
   const [isResponsing, { setTrue: setResponsingTrue, setFalse: setResponsingFalse }] = useBoolean(false)
-  const { notify } = Toast
-  const logError = (message: string) => {
-    notify({ type: 'error', message })
-  }
+
 
   const checkCanSend = () => {
     if (currConversationId !== '-1')
@@ -375,7 +385,8 @@ const Main: FC = (props: any) => {
   }
 
   if (appUnavailable)
-    return <AppUnavailable isUnknwonReason={isUnknwonReason} errMessage={!hasSetAppConfig ? 'Please set APP_ID and API_KEY in config/index.tsx' : ''} />
+    return <AppUnavailable isUnknwonReason={isUnknwonReason} errMessage={!hasSetAppConfig ? t('app.common.appUnavailable') : ''
+    } />
 
   if (!APP_ID || !APP_INFO || !promptConfig)
     return <Loading type='app' />
