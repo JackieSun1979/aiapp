@@ -34,8 +34,8 @@ export const updateFeedback = async ({ url, body }: { url: string; body: Feedbac
   return post(url, { body })
 }
 
-export const userAppData = (loginname: any): Promise<any> => {
-  return getRequest(`workspaces/current/endusers/query?loginname=${loginname}`)
+export const userAppData = (name: any): Promise<any> => {
+  return getRequest(`workspaces/current/endusers/query?name=${name}`)
 }
 export const getDepartments = (enduserid: any): Promise<any> => {
   return getRequest(`workspaces/current/endusers/${enduserid}/departments`)
